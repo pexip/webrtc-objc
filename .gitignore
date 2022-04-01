@@ -1,0 +1,9 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+Scripts/*
+!Scripts/build.py
+!Scripts/create_xcframework.py
+!Scripts/patches

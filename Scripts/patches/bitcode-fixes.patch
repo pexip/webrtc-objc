@@ -1,0 +1,38 @@
+From 11c0fb499542fd8e4c2fef69af394cda16072d94 Mon Sep 17 00:00:00 2001
+From: Vadym Markov <markov.vadym@gmail.com>
+Date: Wed, 30 Mar 2022 16:04:57 +0200
+Subject: [PATCH] Fix build error when enabling bitcode in iOS build
+
+---
+ config/compiler/BUILD.gn | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 48aa424f8..219991410 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -537,12 +537,15 @@ config("compiler") {
+   if (is_clang && !is_nacl && current_os != "zos") {
+     cflags += [ "-fcrash-diagnostics-dir=" + clang_diagnostic_dir ]
+ 
+-    # TODO(hans): Remove this once Clang generates better optimized debug info
+-    # by default. https://crbug.com/765793
+-    cflags += [
+-      "-mllvm",
+-      "-instcombine-lower-dbg-declare=0",
+-    ]
++    # -mllvm is not supported with -fembed-bitcode
++    if (!(is_ios && enable_ios_bitcode)) {
++      # TODO(hans): Remove this once Clang generates better optimized debug info
++      # by default. https://crbug.com/765793
++      cflags += [
++        "-mllvm",
++        "-instcombine-lower-dbg-declare=0",
++      ]
++    }
+     if (!is_debug && use_thin_lto && is_a_target_toolchain) {
+       if (is_win) {
+         ldflags += [ "-mllvm:-instcombine-lower-dbg-declare=0" ]
+-- 
+2.32.0 (Apple Git-132)
+
