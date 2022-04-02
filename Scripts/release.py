@@ -110,7 +110,7 @@ def update_source_code(asset: Asset):
     parent_path = os.path.join(os.getcwd(), os.pardir)
     package_path = os.path.join(parent_path, 'Package.swift')
     os.system(f"sed -i '' 's#url:.*,#url: \"{asset.url}\",#' {package_path}")
-    os.system(f"sed -i '' 's#checksum:.*,#checksum: \"{asset.checksum}\"#' {package_path}")
+    os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
     logging.info(f"Creating a new draft release {details.draft_tag} on GitHub.")
