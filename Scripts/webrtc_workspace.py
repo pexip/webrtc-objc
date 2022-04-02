@@ -76,7 +76,7 @@ class WebRTCWorkspace:
         else:
             self.branch = self._fetch_webrtc_branch_name(self.milestone)
 
-    def _fetch_stable_webrtc_milestone() -> str:
+    def _fetch_stable_webrtc_milestone(self) -> str:
         logging.info('Fetching latest stable WebRTC milestone...')
         releases = requests.get(
             'https://chromiumdash.appspot.com/fetch_milestones?only_branched=true'
@@ -87,7 +87,7 @@ class WebRTCWorkspace:
         )
         return release['milestone']
 
-    def _fetch_webrtc_branch_name(milestone: str) -> str:
+    def _fetch_webrtc_branch_name(self, milestone: str) -> str:
         logging.info(f"Fetching WebRTC branch name for m{milestone}...")
         releases = requests.get(
             f"https://chromiumdash.appspot.com/fetch_milestones?mstone={milestone}"
