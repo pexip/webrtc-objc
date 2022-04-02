@@ -5,5 +5,7 @@ xcuserdata/
 DerivedData/
 Scripts/*
 !Scripts/build.py
-!Scripts/create_xcframework.py
+!Scripts/release.py
+!Scripts/webrtc_builder.py
+!Scripts/webrtc_workspace.py
 !Scripts/patches

@@ -77,20 +77,16 @@ class WebRTCBuilder:
     ### - Private
 
     @property
-    def _enable_dsyms(self) -> bool:
-        return not self.bitcode and self.dsyms
-
-    @property
     def _common_gn_args(self) -> List[str]:
         return [
             'is_component_build=false',
             'rtc_include_tests=false',
             'is_debug=false',
-            'rtc_libvpx_build_vp9=true',
+            'rtc_libvpx_build_vp9=false',
             'use_goma=false',
             'rtc_enable_objc_symbol_export=true',
             'enable_stripping=true',
-            'enable_dsyms=' + ('true' if self._enable_dsyms else 'false')
+            'enable_dsyms=' + ('true' if self.dsyms else 'false')
         ]
 
     def _ios_gn_args(
@@ -141,7 +137,7 @@ class WebRTCBuilder:
         self._merge_dylibs(platform_path, lib_paths)
         
         # 3. Merge dsyms if needed
-        if self._enable_dsyms:
+        if self.dsyms:
             logging.info(f"Merging dsyms for {platform.environment}.")
             self._merge_dsyms(platform_path, lib_paths)
         
@@ -216,19 +212,18 @@ class WebRTCBuilder:
             self._run(['lipo'] + in_dsym_paths + ['-create', '-output', out_dsym_path])
 
     def _set_version_number(self, platform_path: str):
-        version_number = f"{self.version_number}.0" if self.version_number.isnumeric() else '1.0'
         resources_dir = os.path.join(platform_path, FRAMEWORK_NAME, 'Resources')
         if not os.path.exists(resources_dir):
             resources_dir = os.path.dirname(resources_dir)
         infoplist_path = os.path.join(resources_dir, 'Info.plist')
         
-        logging.info(f"Setting version number: {version_number}")
+        logging.info(f"Setting version number: {self.version_number}")
         self._run([
-            'PlistBuddy', '-c', 'Set :CFBundleVersion ' + version_number,
+            'PlistBuddy', '-c', 'Set :CFBundleVersion ' + self.version_number,
             infoplist_path
         ])
         self._run([
-            'PlistBuddy', '-c', 'Set :CFBundleShortVersionString ' + version_number,
+            'PlistBuddy', '-c', 'Set :CFBundleShortVersionString ' + self.version_number,
             infoplist_path
         ])
         self._run(['plutil', '-convert', 'binary1', infoplist_path])
