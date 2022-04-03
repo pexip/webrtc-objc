@@ -3,6 +3,7 @@
 import os
 import sys
 import logging
+import shutil
 import argparse
 import requests
 import hashlib
@@ -21,7 +22,7 @@ GITHUB_HEADERS = {
 }
 PLATFORMS = {
     'ios': ['ios', 'simulator'],
-    'universal': ['ios', 'simulator', 'catalyst', 'mac']
+    'universal': ['ios', 'simulator', 'mac']
 }
 BUILD_CONFIGS = [
     {'bitcode': False, 'dsyms': False},
@@ -46,10 +47,6 @@ class ReleaseDetails:
     @property
     def name(self) -> str:
         return f"M{self.webrtc_milestone}"
-
-    @property
-    def draft_tag(self) -> str:
-        return f"{self.tag}-draft"
 
 ### - FUNCTIONS
 
@@ -79,11 +76,11 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
             builder.clean()
             builder.build()
             
-            name = f"WebRTC-{folder_name}.zip"
+            zip_name = f"WebRTC-{folder_name}.zip"
             zip_path = f"{builder.xcframework_path}.zip"
             os.system(f"zip --symlinks -r {zip_path} {builder.xcframework_path}/")
-            asset = upload_asset(name, zip_path, upload_url)  
-            assets += Asset(asset['url'], checksum(zip_path))
+            asset = upload_asset(zip_name, zip_path, upload_url)  
+            assets.append(Asset(asset['url'], checksum(zip_path)))
     return assets
 
 def upload_asset(name: str, path: str, url: str) -> Any:
@@ -113,13 +110,13 @@ def update_source_code(asset: Asset):
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
-    logging.info(f"Creating a new draft release {details.draft_tag} on GitHub.")
+    logging.info(f"Creating a new draft release {details.tag} on GitHub.")
     body = f"Milestone: {details.name}\n"
     body += f"Branch: {details.webrtc_branch}\n"
     body += f"Commit: {details.webrtc_commit}"
     parameters = { 
         'name': details.name,
-        'tag_name': details.draft_tag,
+        'tag_name': details.tag,
         'draft': True,
         'body': body
     }
@@ -134,16 +131,12 @@ def publish_release(id: int, details: ReleaseDetails):
     os.system('git add .')
     os.system(f"git commit -m \"Update Package.swift for {details.name}\"")
     os.system('git push origin master')
-    parameters = { 
-        'tag_name': details.tag,
-        'draft': False
-    }
+    parameters = {'draft': False}
     requests.patch(
         f"{GITHUB_API_URL}/releases/{id}", 
         json = parameters, 
         headers = GITHUB_HEADERS
     )
-    delete_tag(details.draft_tag)
 
 def delete_release(release):
     for asset in release['assets']:
@@ -183,7 +176,7 @@ def main():
     # 1. Prepare workspace
     from webrtc_workspace import WebRTCWorkspace
     workspace = WebRTCWorkspace(milestone)
-    #workspace.prepare()
+    workspace.prepare()
 
     # 2. Create a new release
     release_details = ReleaseDetails(
@@ -196,6 +189,7 @@ def main():
         f"{GITHUB_API_URL}/releases/tags/{release_details.tag}", 
         headers = GITHUB_HEADERS
     )
+    
     if request.status_code == 200:
         print(f"Release {workspace.version_number} already exists on GitHub. Do you want to delete it?")
         answer = input("yes/no")
@@ -207,6 +201,7 @@ def main():
     release = draft_release(release_details)
 
     # 3. Build and upload xcframeworks
+    shutil.rmtree(workspace.output_path, ignore_errors = True)
     assets = create_assets(workspace, release['upload_url'])
     
     # 4. Update Package.swift

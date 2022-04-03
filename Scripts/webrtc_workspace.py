@@ -52,7 +52,8 @@ class WebRTCWorkspace:
 
     @property
     def commit(self) -> str:
-        return _run(['git', 'rev-parse', 'HEAD'], WEBRTC_PATH)
+        cmd = ['git', 'rev-parse', 'HEAD']
+        return subprocess.check_output(cmd, cwd=WEBRTC_PATH).decode("utf-8") 
 
     def prepare(self):
         logging.basicConfig()
@@ -89,7 +90,7 @@ class WebRTCWorkspace:
         releases = requests.get(
             f"https://chromiumdash.appspot.com/fetch_milestones?mstone={milestone}"
         ).json()
-        return f"branch-heads/{releases[0]['webrtc_branch']}"
+        return releases[0]['webrtc_branch']
 
     def _download_depot_tools(self):
         if not os.path.isdir(DEPOT_TOOLS_PATH):
@@ -105,12 +106,13 @@ class WebRTCWorkspace:
         os.environ['PATH'] = DEPOT_TOOLS_PATH + os.pathsep + os.environ['PATH']
 
     def _download_webrtc(self):
-        logging.info(f"Fetching WebRTC branch name {self.branch}...")
+        branch = f"branch-heads/{self.branch}"
+        logging.info(f"Fetching WebRTC branch name {branch}...")
         if not os.path.isdir(WEBRTC_PATH):
             _run(['fetch', '--nohooks', 'webrtc_ios'])
         _run(['git', 'fetch', '--all'], WEBRTC_PATH)
-        _run(['git', 'checkout', self.branch], WEBRTC_PATH)
-        _run(['git', 'pull', 'origin', self.branch], WEBRTC_PATH)
+        _run(['git', 'checkout', branch], WEBRTC_PATH)
+        _run(['git', 'pull', 'origin', branch], WEBRTC_PATH)
         # Antivirus software could detect one of the files 
         # in "src/third_party" folder as a virus and delete it. 
         # Commit the change because otherwise "gclient sync" would fail.
@@ -129,7 +131,7 @@ class WebRTCWorkspace:
         for patch in BUILD_PATCHES:
             _run(['git', 'am', '-3', patch], WEBRTC_BUILD_PATH)
 
-    def _git_reset(cwd: str):
+    def _git_reset(self, cwd: str):
         _run(['git', 'reset', '--hard', 'origin'], cwd)
 
 ### - FUNCTIONS

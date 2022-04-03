@@ -8,6 +8,7 @@ from typing import List
 ### - SCRIPT ARGUMENTS
 
 def parse_args() -> List:
+    # WebRTC is not properly working on MacCatalyst yet.
     platform_names = ['ios', 'simulator', 'catalyst', 'mac']
     parser = argparse.ArgumentParser(description='Create WebRTC xcframework')
     parser.add_argument(
@@ -19,7 +20,7 @@ def parse_args() -> List:
     parser.add_argument(
         '--platforms',                
         nargs='+',
-        default=platform_names,
+        default=['ios', 'simulator', 'mac'],
         choices=platform_names,
         help='Platforms to build. Defaults to %(default)s.'
     )
@@ -32,7 +33,7 @@ def parse_args() -> List:
     parser.add_argument(
         '--dsyms',                
         action='store_true',
-        default=True,
+        default=False,
         help='Include dSYMs. Has no effect when compiled with bitcode.'
     )
     return parser.parse_args()
