@@ -154,7 +154,7 @@ def delete_tag(tag_name: str):
         headers = GITHUB_HEADERS
     )
 
-## SCRIPT ARGUMENTS
+### - SCRIPT ARGUMENTS
 
 def parse_args() -> List:
     parser = argparse.ArgumentParser(
