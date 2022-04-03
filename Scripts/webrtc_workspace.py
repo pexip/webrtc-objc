@@ -36,23 +36,23 @@ class WebRTCWorkspace:
 
     @property
     def version_number(self) -> str:
-        f"{self.milestone}.0.{self.branch}"
+        return f"{self.milestone}.0.{self.branch}"
 
     @property
     def depot_tools_path(self) -> str:
-        find_depot_tools.DEPOT_TOOLS_PATH
+        return find_depot_tools.DEPOT_TOOLS_PATH
 
     @property
     def webrtc_path(self) -> str:
-        WEBRTC_PATH
+        return WEBRTC_PATH
 
     @property
     def output_path(self) -> str:
-        OUTPUT_PATH
+        return OUTPUT_PATH
 
     @property
     def commit(self) -> str:
-        _run(['git', 'rev-parse', 'HEAD'], WEBRTC_PATH)
+        return _run(['git', 'rev-parse', 'HEAD'], WEBRTC_PATH)
 
     def prepare(self):
         logging.basicConfig()
@@ -71,10 +71,7 @@ class WebRTCWorkspace:
     def _set_branch(self):
         if self.milestone == 'stable':
             self.milestone = self._fetch_stable_webrtc_milestone()
-        if self.milestone == 'main':
-            self.branch = 'main'
-        else:
-            self.branch = self._fetch_webrtc_branch_name(self.milestone)
+        self.branch = self._fetch_webrtc_branch_name(self.milestone)
 
     def _fetch_stable_webrtc_milestone(self) -> str:
         logging.info('Fetching latest stable WebRTC milestone...')
@@ -118,7 +115,8 @@ class WebRTCWorkspace:
         # in "src/third_party" folder as a virus and delete it. 
         # Commit the change because otherwise "gclient sync" would fail.
         _run(['git', 'add', '.'], THIRD_PARTY_PATH)
-        _run(['git', 'commit', '-m', 'Temp local changes'], THIRD_PARTY_PATH)
+        if os.system('echo "$( git status --porcelain | wc -l )"') == 1:
+            _run(['git', 'commit', '-m', 'Temp local changes'], THIRD_PARTY_PATH)
 
     def _sync_gclient(self):
         logging.info('Syncing gclient')

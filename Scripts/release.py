@@ -45,11 +45,11 @@ class ReleaseDetails:
 
     @property
     def name(self) -> str:
-        f"M{self.milestone}"
+        return f"M{self.webrtc_milestone}"
 
     @property
     def draft_tag(self) -> str:
-        f"{self.tag}-draft"
+        return f"{self.tag}-draft"
 
 ### - FUNCTIONS
 
@@ -81,7 +81,7 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
             
             name = f"WebRTC-{folder_name}.zip"
             zip_path = f"{builder.xcframework_path}.zip"
-            os.system(f"zip --symlinks -r zip_path {builder.xcframework_path}/")
+            os.system(f"zip --symlinks -r {zip_path} {builder.xcframework_path}/")
             asset = upload_asset(name, zip_path, upload_url)  
             assets += Asset(asset['url'], checksum(zip_path))
     return assets
@@ -115,7 +115,7 @@ def update_source_code(asset: Asset):
 def draft_release(details: ReleaseDetails) -> Any:
     logging.info(f"Creating a new draft release {details.draft_tag} on GitHub.")
     body = f"Milestone: {details.name}\n"
-    body = f"Branch: {details.webrtc_branch})\n"
+    body += f"Branch: {details.webrtc_branch}\n"
     body += f"Commit: {details.webrtc_commit}"
     parameters = { 
         'name': details.name,
@@ -133,7 +133,7 @@ def publish_release(id: int, details: ReleaseDetails):
     logging.info(f"Publishing a release {details.tag} on GitHub.")
     os.system('git add .')
     os.system(f"git commit -m \"Update Package.swift for {details.name}\"")
-    os.system('git push origin main')
+    os.system('git push origin master')
     parameters = { 
         'tag_name': details.tag,
         'draft': False
@@ -183,11 +183,11 @@ def main():
     # 1. Prepare workspace
     from webrtc_workspace import WebRTCWorkspace
     workspace = WebRTCWorkspace(milestone)
-    workspace.prepare()
+    #workspace.prepare()
 
     # 2. Create a new release
     release_details = ReleaseDetails(
-        milestone,
+        workspace.milestone,
         workspace.branch,
         workspace.commit,
         workspace.version_number
@@ -204,9 +204,8 @@ def main():
         else:
             logging.info(f"Cancelled by user.")
             return 0
-    
     release = draft_release(release_details)
-    
+
     # 3. Build and upload xcframeworks
     assets = create_assets(workspace, release['upload_url'])
     
