@@ -37,6 +37,7 @@ BUILD_CONFIGS = [
 
 @dataclass
 class Asset:
+    name: str
     url: str
     checksum: str
 
@@ -83,7 +84,7 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
             zip_path = f"{builder.xcframework_path}.zip"
             os.system(f"zip --symlinks -r {zip_path} {builder.xcframework_path}/")
             asset = upload_asset(zip_name, zip_path, upload_url)  
-            assets.append(Asset(asset['url'], checksum(zip_path)))
+            assets.append(Asset(zip_name, asset['url'], checksum(zip_path)))
     return assets
 
 def upload_asset(name: str, path: str, url: str) -> Any:
@@ -113,14 +114,11 @@ def update_source_code(asset: Asset):
 
 def draft_release(details: ReleaseDetails) -> Any:
     logging.info(f"Creating a new draft release {details.tag} on GitHub.")
-    body = f"Milestone: {details.name}\n"
-    body += f"Branch: {details.webrtc_branch}\n"
-    body += f"Commit: {details.webrtc_commit}"
     parameters = { 
         'name': details.name,
         'tag_name': details.tag,
         'draft': True,
-        'body': body
+        'body': ""
     }
     return requests.post(
         f"{GITHUB_API_URL}/releases", 
@@ -128,20 +126,32 @@ def draft_release(details: ReleaseDetails) -> Any:
         headers = GITHUB_HEADERS
     ).json()
 
-def publish_release(id: int, details: ReleaseDetails):
+def publish_release(id: int, details: ReleaseDetails, assets: List[Asset]):
     logging.info(f"Publishing a release {details.tag} on GitHub.")
     commit_message = f"\"Update Package.swift for {details.name}\""
     subprocess.check_call(['git', 'add', '.'], cwd=ROOT_PATH)
     subprocess.check_call(['git', 'commit', '-m', commit_message], cwd=ROOT_PATH)
     subprocess.check_call(['git', 'push', 'origin', 'master'], cwd=ROOT_PATH)
-    parameters = {'draft': False}
+    
+    body = f"**Milestone**: {details.name}\n"
+    body += f"**Branch**: {details.webrtc_branch}\n"
+    body += f"**Commit**: {details.webrtc_commit}\n\n"
+    body += "**Binaries**:\n\n"
+    
+    for asset in assets:
+        body += f"Name: {asset.name}\n"
+        body += f"Url: {asset.url}\n"
+        body += f"Checksum: {asset.checksum}\n\n"    
+    
+    parameters = {'draft': False, 'body': body}
+    
     requests.patch(
         f"{GITHUB_API_URL}/releases/{id}", 
         json = parameters, 
         headers = GITHUB_HEADERS
     )
 
-def delete_release(release):
+def delete_release(release: Any):
     for asset in release['assets']:
         requests.delete(asset['url'], headers = GITHUB_HEADERS)
     requests.delete(release['url'], headers = GITHUB_HEADERS)
@@ -211,7 +221,7 @@ def main():
     update_source_code(asset = assets[-1])
 
     # 5. Publish a new release
-    publish_release(release['id'], release_details)
+    publish_release(release['id'], release_details, assets)
 
     # 4. Clean workspace
     workspace.clean()
