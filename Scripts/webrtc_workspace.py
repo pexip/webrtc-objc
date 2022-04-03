@@ -9,7 +9,7 @@ from typing import List
 
 ### - CONSTANTS
 
-CWD_PATH = os.getcwd()
+CWD_PATH = os.path.dirname(os.path.realpath(__file__))
 DEPOT_TOOLS_PATH = os.path.join(CWD_PATH, 'depot_tools')
 WEBRTC_PATH = os.path.join(CWD_PATH, 'src')
 WEBRTC_BUILD_PATH = os.path.join(WEBRTC_PATH, 'build')

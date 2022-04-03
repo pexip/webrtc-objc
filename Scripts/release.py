@@ -6,6 +6,7 @@ import logging
 import shutil
 import argparse
 import requests
+import subprocess
 import hashlib
 from typing import Any, List
 from dataclasses import dataclass
@@ -14,6 +15,8 @@ from webrtc_builder import WebRTCBuilder
 
 ### - CONSTANTS
 
+CWD_PATH = os.path.dirname(os.path.realpath(__file__))
+ROOT_PATH = os.path.join(CWD_PATH, os.pardir)
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_API_URL = 'https://api.github.com/repos/pexip/webrtc-ios-builds'
 GITHUB_HEADERS = {
@@ -104,8 +107,7 @@ def checksum(file: str) -> str:
 
 def update_source_code(asset: Asset):
     logging.info("Updating Package.swift.")
-    parent_path = os.path.join(os.getcwd(), os.pardir)
-    package_path = os.path.join(parent_path, 'Package.swift')
+    package_path = os.path.join(ROOT_PATH, 'Package.swift')
     os.system(f"sed -i '' 's#url:.*,#url: \"{asset.url}\",#' {package_path}")
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
 
@@ -128,9 +130,10 @@ def draft_release(details: ReleaseDetails) -> Any:
 
 def publish_release(id: int, details: ReleaseDetails):
     logging.info(f"Publishing a release {details.tag} on GitHub.")
-    os.system('git add .')
-    os.system(f"git commit -m \"Update Package.swift for {details.name}\"")
-    os.system('git push origin master')
+    commit_message = f"\"Update Package.swift for {details.name}\""
+    subprocess.check_call(['git', 'add', '.'], cwd=ROOT_PATH)
+    subprocess.check_call(['git', 'commit', '-m', commit_message], cwd=ROOT_PATH)
+    subprocess.check_call(['git', 'push', 'origin', 'master'], cwd=ROOT_PATH)
     parameters = {'draft': False}
     requests.patch(
         f"{GITHUB_API_URL}/releases/{id}", 
