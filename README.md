@@ -8,7 +8,7 @@ URL-based binary targets from private GitHub repos are supported in Xcode 13.3.
 
 Add `machine api.github.com login YOUR_GITHUB_USERNAME password YOUR_GITHUB_TOKEN` to your `~/.netrc` file.
 
-**For universal `xcframework` w/ bitcode and w/ dsyms :**
+**For universal `xcframework` w/ bitcode and w/ dsyms:**
 
 ```swift
 dependencies: [
