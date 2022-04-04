@@ -12,6 +12,7 @@ from typing import Any, List
 from dataclasses import dataclass
 from webrtc_workspace import WebRTCWorkspace
 from webrtc_builder import WebRTCBuilder
+from webrtc_builder import XCFRAMEWORK_NAME
 
 ### - CONSTANTS
 
@@ -30,7 +31,7 @@ PLATFORMS = {
 BUILD_CONFIGS = [
     {'bitcode': False, 'dsyms': False},
     {'bitcode': False, 'dsyms': True},
-    {'bitcode': True, 'dsyms': False}
+    {'bitcode': True, 'dsyms': True}
 ]
 
 ### - CLASSES
@@ -81,8 +82,11 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
             builder.build()
             
             zip_name = f"WebRTC-{folder_name}.zip"
-            zip_path = f"{builder.xcframework_path}.zip"
-            os.system(f"zip --symlinks -r {zip_path} {builder.xcframework_path}/")
+            zip_path = os.path.join(builder.output_path, zip_name)
+            subprocess.check_call(
+                ['zip', '--symlinks', '-r', zip_name, f"{XCFRAMEWORK_NAME}/"], 
+                cwd=builder.output_path
+            )
             asset = upload_asset(zip_name, zip_path, upload_url)  
             assets.append(Asset(zip_name, asset['url'], checksum(zip_path)))
     return assets
@@ -140,7 +144,7 @@ def publish_release(id: int, details: ReleaseDetails, assets: List[Asset]):
     
     for asset in assets:
         body += f"Name: {asset.name}\n"
-        body += f"Url: {asset.url}\n"
+        body += f"URL: {asset.url}\n"
         body += f"Checksum: {asset.checksum}\n\n"    
     
     parameters = {'draft': False, 'body': body}

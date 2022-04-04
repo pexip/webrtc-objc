@@ -95,13 +95,15 @@ class WebRTCBuilder:
         target_environment: str, 
         deployment_target: str
     ) -> List[str]:
+        enable_bitcode = self.bitcode and target_environment == 'device'
         return [
             'target_os="ios"',
             f"target_cpu=\"{target_cpu}\"",
             f"target_environment=\"{target_environment}\"",
             'ios_enable_code_signing=false',
+            'use_lld=false',
             f"ios_deployment_target=\"{deployment_target}\"",
-            f"enable_ios_bitcode={('true' if self.bitcode else 'false')}"
+            f"enable_ios_bitcode={('true' if enable_bitcode else 'false')}"
         ]
 
     def _mac_gn_args(self, target_cpu: str, deployment_target: str) -> List[str]:
