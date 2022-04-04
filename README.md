@@ -8,7 +8,7 @@ URL-based binary targets from private GitHub repos are supported in Xcode 13.3.
 
 Add `machine api.github.com login YOUR_GITHUB_USERNAME password YOUR_GITHUB_TOKEN` to your `~/.netrc` file.
 
-**For universal `xcframework` built w/ bitcode:**
+**For universal `xcframework` w/ bitcode and w/ dsyms :**
 
 ```swift
 dependencies: [
@@ -49,12 +49,12 @@ $ python release.py
   - iOS (device, simulator):
     - "WebRTC-ios.zip" - w/o bitcode, w/o dsyms
     - "WebRTC-ios_dsyms.zip" - w/o bitcode, w/ dsyms
-    - "WebRTC-ios_bitcode.zip" - w/ bitcode, w/o dsyms
+    - "WebRTC-ios_bitcode.zip" - w/ bitcode, w/ dsyms
   - Universal (iOS device, iOS simulator, macOS):
     - "WebRTC-universal.zip" - w/o bitcode, w/o dsyms
     - "WebRTC-universal_dsyms.zip" - w/o bitcode, w/ dsyms
-    - "WebRTC-universal_bitcode.zip" - w/ bitcode, w/o dsyms
-- Update url of the binary target in `Package.swift` with new asset url (universal w/ bitcode)
+    - "WebRTC-universal_bitcode.zip" - w/ bitcode, w/ dsyms
+- Update url of the binary target in `Package.swift` with new asset url (universal w/ bitcode w/ dsyms)
 
 ## Build
 
