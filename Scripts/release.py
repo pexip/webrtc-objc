@@ -88,7 +88,7 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
                 cwd=builder.output_path
             )
             asset = upload_asset(zip_name, zip_path, upload_url)  
-            assets.append(Asset(zip_name, asset['url'], checksum(zip_path)))
+            assets.append(Asset(zip_name, f"{asset['url']}.zip", checksum(zip_path)))
     return assets
 
 def upload_asset(name: str, path: str, url: str) -> Any:
