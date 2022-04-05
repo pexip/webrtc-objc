@@ -7,7 +7,11 @@ let package = Package(
     	.iOS(.v13),
     ],
     products: [
-        .library(name: "WebRTC", targets: ["WebRTC"]),
+        .library(
+            name: "WebRTC",
+            type: .dynamic,
+            targets: ["WebRTC"]
+        ),
     ],
     dependencies: [],
     targets: [
