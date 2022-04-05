@@ -9,7 +9,6 @@ let package = Package(
     products: [
         .library(
             name: "WebRTC",
-            type: .dynamic,
             targets: ["WebRTC"]
         ),
     ],
