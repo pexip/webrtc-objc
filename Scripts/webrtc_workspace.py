@@ -24,7 +24,6 @@ BUILD_PATCHES = [
 ]
 
 sys.path.append(WEBRTC_BUILD_PATH)
-import find_depot_tools
 
 class WebRTCWorkspace:
     milestone: str
@@ -40,7 +39,7 @@ class WebRTCWorkspace:
 
     @property
     def depot_tools_path(self) -> str:
-        return find_depot_tools.DEPOT_TOOLS_PATH
+        return DEPOT_TOOLS_PATH
 
     @property
     def webrtc_path(self) -> str:
