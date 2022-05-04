@@ -128,8 +128,7 @@ class WebRTCWorkspace:
         for patch in WEBRTC_PATCHES:
             _run(['git', 'am', '-3', patch], WEBRTC_PATH)
         for patch in BUILD_PATCHES:
-            _run(['git', 'apply', patch], WEBRTC_BUILD_PATH)
-            _run(['git', 'commit', '-m', 'Apply build patches'], WEBRTC_BUILD_PATH)
+            _run(['git', 'am', '-3', patch], WEBRTC_BUILD_PATH)
 
     def _git_reset(self, cwd: str):
         _run(['git', 'reset', '--hard', 'origin'], cwd)
