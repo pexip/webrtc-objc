@@ -1,4 +1,4 @@
-From 8a116840c4d38f7daf3ee030dac3be59595ae44a Mon Sep 17 00:00:00 2001
+From a3ea94b165ad24aa41346e2a43ae954ad5c1585d Mon Sep 17 00:00:00 2001
 From: Vadym Markov <markov.vadym@gmail.com>
 Date: Wed, 4 May 2022 20:28:33 +0200
 Subject: [PATCH] Fix iOS bitcode
@@ -7,11 +7,11 @@ Subject: [PATCH] Fix iOS bitcode
  config/c++/c++.gni            |  8 +++----
  config/clang/clang.gni        |  6 ++---
  config/compiler/BUILD.gn      | 41 +++++++++++++++++++----------------
- config/compiler/compiler.gni  |  3 ++-
+ config/compiler/compiler.gni  |  5 +++--
  config/ios/rules.gni          |  4 ++--
  toolchain/apple/toolchain.gni |  3 ++-
  toolchain/mac/BUILD.gn        |  2 +-
- 7 files changed, 36 insertions(+), 31 deletions(-)
+ 7 files changed, 37 insertions(+), 32 deletions(-)
 
 diff --git a/config/c++/c++.gni b/config/c++/c++.gni
 index 4d8e4853a..b4bd9925e 100644
@@ -50,10 +50,10 @@ index 1e6621848..a9b923a86 100644
    clang_base_path = default_clang_base_path
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index f378b9560..c9fe248a8 100644
+index 48aa424f8..17febb2cf 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -525,12 +525,15 @@ config("compiler") {
+@@ -537,12 +537,15 @@ config("compiler") {
    if (is_clang && !is_nacl && current_os != "zos") {
      cflags += [ "-fcrash-diagnostics-dir=" + clang_diagnostic_dir ]
  
@@ -75,7 +75,7 @@ index f378b9560..c9fe248a8 100644
      if (!is_debug && use_thin_lto && is_a_target_toolchain) {
        if (is_win) {
          ldflags += [ "-mllvm:-instcombine-lower-dbg-declare=0" ]
-@@ -1238,7 +1241,7 @@ config("compiler_deterministic") {
+@@ -1250,7 +1253,7 @@ config("compiler_deterministic") {
      # different build directory like "out/feature_a" and "out/feature_b" if
      # we build same files with same compile flag.
      # Other paths are already given in relative, no need to normalize them.
@@ -84,7 +84,7 @@ index f378b9560..c9fe248a8 100644
        # TODO(https://crbug.com/1231236): Use -ffile-compilation-dir= here.
        cflags += [
          "-Xclang",
-@@ -1246,11 +1249,11 @@ config("compiler_deterministic") {
+@@ -1258,11 +1261,11 @@ config("compiler_deterministic") {
          "-Xclang",
          ".",
        ]
@@ -99,7 +99,7 @@ index f378b9560..c9fe248a8 100644
      if (!is_win) {
        # We don't use clang -cc1as on Windows (yet? https://crbug.com/762167)
        asmflags = [ "-Wa,-fdebug-compilation-dir,." ]
-@@ -1719,15 +1722,15 @@ config("no_chromium_code") {
+@@ -1738,15 +1741,15 @@ config("no_chromium_code") {
        # third-party libraries.
        "-Wno-c++11-narrowing",
      ]
@@ -125,21 +125,23 @@ index f378b9560..c9fe248a8 100644
  
    # Rust warnings to ignore in third party dependencies. This list is
 diff --git a/config/compiler/compiler.gni b/config/compiler/compiler.gni
-index 056759834..a18232d4d 100644
+index 9d25c1058..91ea789fb 100644
 --- a/config/compiler/compiler.gni
 +++ b/config/compiler/compiler.gni
-@@ -39,7 +39,8 @@ declare_args() {
-   # Tentatively used on iOS, except in cronet builds (cronet still supports
-   # 32-bit builds, which lld doesn't support).
+@@ -219,8 +219,9 @@ declare_args() {
+   # 32-bit builds, which lld doesn't support) or when targeting "catalyst"
+   # (which lld doesn't support either).
    # The default linker everywhere else.
--  use_lld = is_clang && current_os != "zos" && !(is_ios && is_cronet_build)
+-  use_lld = is_clang && !(is_mac && is_gpu_fyi_bot) && current_os != "zos" &&
+-            !(is_ios && (is_cronet_build || target_environment == "catalyst"))
 +  use_lld = false
-+  #use_lld = is_clang && current_os != "zos" && !(is_ios && is_cronet_build)
++  #use_lld = is_clang && !(is_mac && is_gpu_fyi_bot) && current_os != "zos" &&
++  #          !(is_ios && (is_cronet_build || target_environment == "catalyst"))
  }
  
  declare_args() {
 diff --git a/config/ios/rules.gni b/config/ios/rules.gni
-index f7cce308e..c1d2bf3c4 100644
+index b78090574..9cc4e1811 100644
 --- a/config/ios/rules.gni
 +++ b/config/ios/rules.gni
 @@ -116,8 +116,8 @@ template("lipo_binary") {
@@ -154,11 +156,11 @@ index f7cce308e..c1d2bf3c4 100644
      }
  
 diff --git a/toolchain/apple/toolchain.gni b/toolchain/apple/toolchain.gni
-index 399a62f03..fcb2fdf2c 100644
+index 7221c8027..e09e168e0 100644
 --- a/toolchain/apple/toolchain.gni
 +++ b/toolchain/apple/toolchain.gni
-@@ -121,7 +121,8 @@ template("apple_toolchain") {
-       toolchain_is_component_build = is_component_build
+@@ -106,7 +106,8 @@ template("apple_toolchain") {
+       toolchain_uses_lld = use_lld
      }
  
 -    prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
@@ -168,7 +170,7 @@ index 399a62f03..fcb2fdf2c 100644
      _cxx = "${prefix}clang++"
  
 diff --git a/toolchain/mac/BUILD.gn b/toolchain/mac/BUILD.gn
-index 0d7a71488..0fa1b7ad3 100644
+index 0adce9400..d2b6a5b57 100644
 --- a/toolchain/mac/BUILD.gn
 +++ b/toolchain/mac/BUILD.gn
 @@ -23,7 +23,7 @@ template("mac_toolchain") {
@@ -178,8 +180,8 @@ index 0d7a71488..0fa1b7ad3 100644
 -        use_lld = true
 +        use_lld = false
  
-         # Override `is_component_build` for the host toolchain.
-         # See https://crbug.com/gn/286 for details why this is
+         # Defined in //base, would trigger a warning if the build doesn't depend
+         # on it.
 -- 
 2.32.0 (Apple Git-132)
 
