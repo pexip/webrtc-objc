@@ -1,5 +1,20 @@
+From 8a116840c4d38f7daf3ee030dac3be59595ae44a Mon Sep 17 00:00:00 2001
+From: Vadym Markov <markov.vadym@gmail.com>
+Date: Wed, 4 May 2022 20:28:33 +0200
+Subject: [PATCH] Fix iOS bitcode
+
+---
+ config/c++/c++.gni            |  8 +++----
+ config/clang/clang.gni        |  6 ++---
+ config/compiler/BUILD.gn      | 41 +++++++++++++++++++----------------
+ config/compiler/compiler.gni  |  3 ++-
+ config/ios/rules.gni          |  4 ++--
+ toolchain/apple/toolchain.gni |  3 ++-
+ toolchain/mac/BUILD.gn        |  2 +-
+ 7 files changed, 36 insertions(+), 31 deletions(-)
+
 diff --git a/config/c++/c++.gni b/config/c++/c++.gni
-index 626369884..771fdcf37 100644
+index 4d8e4853a..b4bd9925e 100644
 --- a/config/c++/c++.gni
 +++ b/config/c++/c++.gni
 @@ -11,10 +11,10 @@ declare_args() {
@@ -11,14 +26,14 @@ index 626369884..771fdcf37 100644
 -      (is_win && is_clang) ||
 -      (is_chromeos && default_toolchain != "//build/toolchain/cros:target")
 +  use_custom_libcxx = false
-+#      is_fuchsia || is_android || is_apple || is_linux || is_chromeos_lacros ||
-+#      (is_win && is_clang) ||
-+#      (is_chromeos && default_toolchain != "//build/toolchain/cros:target")
++  #    is_fuchsia || is_android || is_apple || is_linux || is_chromeos_lacros ||
++  #    (is_win && is_clang) ||
++  #    (is_chromeos && default_toolchain != "//build/toolchain/cros:target")
  
    # Use libc++ instead of stdlibc++ when using the host_cpu toolchain, even if
    # use_custom_libcxx is false. This is useful for cross-compiles where a custom
 diff --git a/config/clang/clang.gni b/config/clang/clang.gni
-index 1e6621848..4d6bd7201 100644
+index 1e6621848..a9b923a86 100644
 --- a/config/clang/clang.gni
 +++ b/config/clang/clang.gni
 @@ -10,9 +10,9 @@ declare_args() {
@@ -29,16 +44,16 @@ index 1e6621848..4d6bd7201 100644
 -      is_clang && !is_nacl && current_os != "zos" &&
 -      default_toolchain != "//build/toolchain/cros:target"
 +  clang_use_chrome_plugins = false
-+#      is_clang && !is_nacl && !is_ios && current_os != "zos" &&
-+#      default_toolchain != "//build/toolchain/cros:target"
++  #    is_clang && !is_nacl && current_os != "zos" &&
++  #    default_toolchain != "//build/toolchain/cros:target"
  
    clang_base_path = default_clang_base_path
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index b3d4c6b98..3fecca9f5 100644
+index f378b9560..c9fe248a8 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -537,12 +537,15 @@ config("compiler") {
+@@ -525,12 +525,15 @@ config("compiler") {
    if (is_clang && !is_nacl && current_os != "zos") {
      cflags += [ "-fcrash-diagnostics-dir=" + clang_diagnostic_dir ]
  
@@ -84,7 +99,7 @@ index b3d4c6b98..3fecca9f5 100644
      if (!is_win) {
        # We don't use clang -cc1as on Windows (yet? https://crbug.com/762167)
        asmflags = [ "-Wa,-fdebug-compilation-dir,." ]
-@@ -1717,15 +1720,15 @@ config("no_chromium_code") {
+@@ -1719,15 +1722,15 @@ config("no_chromium_code") {
        # third-party libraries.
        "-Wno-c++11-narrowing",
      ]
@@ -92,15 +107,16 @@ index b3d4c6b98..3fecca9f5 100644
 -      cflags += [
 -        # Disabled for similar reasons as -Wunused-variable.
 -        "-Wno-unused-but-set-variable",
-+    #if (!is_nacl) {
-+    #  cflags += [
-+    #    # Disabled for similar reasons as -Wunused-variable.
-+    #    "-Wno-unused-but-set-variable",
- 
+-
 -        # TODO(https://crbug.com/1202159): Clean up and enable.
 -        "-Wno-misleading-indentation",
 -      ]
 -    }
++    #if (!is_nacl) {
++    #  cflags += [
++    #    # Disabled for similar reasons as -Wunused-variable.
++    #    "-Wno-unused-but-set-variable",
++    #
 +    #    # TODO(https://crbug.com/1202159): Clean up and enable.
 +    #    "-Wno-misleading-indentation",
 +    #  ]
@@ -109,54 +125,21 @@ index b3d4c6b98..3fecca9f5 100644
  
    # Rust warnings to ignore in third party dependencies. This list is
 diff --git a/config/compiler/compiler.gni b/config/compiler/compiler.gni
-index 8e7bdd8f0..f447a3e18 100644
+index 056759834..a18232d4d 100644
 --- a/config/compiler/compiler.gni
 +++ b/config/compiler/compiler.gni
-@@ -220,8 +220,9 @@ declare_args() {
-   # 32-bit builds, which lld doesn't support) or when targeting "catalyst"
-   # (which lld doesn't support either).
+@@ -39,7 +39,8 @@ declare_args() {
+   # Tentatively used on iOS, except in cronet builds (cronet still supports
+   # 32-bit builds, which lld doesn't support).
    # The default linker everywhere else.
--  use_lld = is_clang && !(is_mac && is_gpu_fyi_bot) && current_os != "zos" &&
--            !(is_ios && (is_cronet_build || target_environment == "catalyst"))
+-  use_lld = is_clang && current_os != "zos" && !(is_ios && is_cronet_build)
 +  use_lld = false
-+#  use_lld = is_clang && !(is_mac && is_gpu_fyi_bot) && current_os != "zos" &&
-+#            !(is_ios && (is_cronet_build || target_environment == "catalyst"))
++  #use_lld = is_clang && current_os != "zos" && !(is_ios && is_cronet_build)
  }
  
  declare_args() {
-diff --git a/config/ios/BUILD.gn b/config/ios/BUILD.gn
-index e516b7019..6e146bd7b 100644
---- a/config/ios/BUILD.gn
-+++ b/config/ios/BUILD.gn
-@@ -126,16 +126,16 @@ config("runtime_library") {
-   # TODO(crbug.com/1223481): Temporarily use a different
-   # libclang_rt.iossim.a for arm64 simulator builds. This can be
-   # removed when an arm64 slice is added to upstream Clang.
--  if (target_environment == "simulator" && current_cpu == "arm64") {
--    assert(1300 <= xcode_version_int && xcode_version_int <= 1321)
--    ldflags += [
--      "-lSystem",
--      rebase_path("$ios_toolchains_path/usr/lib/clang/13.0.0/" +
--                      "lib/darwin/libclang_rt.iossim.a",
--                  root_build_dir),
--      "-nodefaultlibs",
--    ]
--  }
-+  #if (target_environment == "simulator" && current_cpu == "arm64") {
-+  #  assert(1300 <= xcode_version_int && xcode_version_int <= 1321)
-+  #  ldflags += [
-+  #    "-lSystem",
-+  #    rebase_path("$ios_toolchains_path/usr/lib/clang/13.0.0/" +
-+  #                    "lib/darwin/libclang_rt.iossim.a",
-+  #                root_build_dir),
-+  #    "-nodefaultlibs",
-+  #  ]
-+  #}
- 
-   # TODO(crbug.com/1259122): Temporarily use a different libclang_rt.osx.a
-   # for catalyst build. This can be removed when a catalyst slice is added
 diff --git a/config/ios/rules.gni b/config/ios/rules.gni
-index b78090574..9cc4e1811 100644
+index f7cce308e..c1d2bf3c4 100644
 --- a/config/ios/rules.gni
 +++ b/config/ios/rules.gni
 @@ -116,8 +116,8 @@ template("lipo_binary") {
@@ -171,11 +154,11 @@ index b78090574..9cc4e1811 100644
      }
  
 diff --git a/toolchain/apple/toolchain.gni b/toolchain/apple/toolchain.gni
-index 2f74d1d26..5ae1ae0a0 100644
+index 399a62f03..fcb2fdf2c 100644
 --- a/toolchain/apple/toolchain.gni
 +++ b/toolchain/apple/toolchain.gni
-@@ -106,7 +106,8 @@ template("apple_toolchain") {
-       toolchain_uses_lld = use_lld
+@@ -121,7 +121,8 @@ template("apple_toolchain") {
+       toolchain_is_component_build = is_component_build
      }
  
 -    prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
@@ -185,7 +168,7 @@ index 2f74d1d26..5ae1ae0a0 100644
      _cxx = "${prefix}clang++"
  
 diff --git a/toolchain/mac/BUILD.gn b/toolchain/mac/BUILD.gn
-index 0adce9400..d2b6a5b57 100644
+index 0d7a71488..0fa1b7ad3 100644
 --- a/toolchain/mac/BUILD.gn
 +++ b/toolchain/mac/BUILD.gn
 @@ -23,7 +23,7 @@ template("mac_toolchain") {
@@ -195,5 +178,8 @@ index 0adce9400..d2b6a5b57 100644
 -        use_lld = true
 +        use_lld = false
  
-         # Defined in //base, would trigger a warning if the build doesn't depend
-         # on it.
+         # Override `is_component_build` for the host toolchain.
+         # See https://crbug.com/gn/286 for details why this is
+-- 
+2.32.0 (Apple Git-132)
+
