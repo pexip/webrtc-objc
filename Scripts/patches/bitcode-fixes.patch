@@ -1,14 +1,41 @@
-From 11c0fb499542fd8e4c2fef69af394cda16072d94 Mon Sep 17 00:00:00 2001
-From: Vadym Markov <markov.vadym@gmail.com>
-Date: Wed, 30 Mar 2022 16:04:57 +0200
-Subject: [PATCH] Fix build error when enabling bitcode in iOS build
-
----
- config/compiler/BUILD.gn | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
-
+diff --git a/config/c++/c++.gni b/config/c++/c++.gni
+index 626369884..771fdcf37 100644
+--- a/config/c++/c++.gni
++++ b/config/c++/c++.gni
+@@ -11,10 +11,10 @@ declare_args() {
+   # standard library support.
+   # Don't check in changes that set this to false for more platforms; doing so
+   # is not supported.
+-  use_custom_libcxx =
+-      is_fuchsia || is_android || is_apple || is_linux || is_chromeos_lacros ||
+-      (is_win && is_clang) ||
+-      (is_chromeos && default_toolchain != "//build/toolchain/cros:target")
++  use_custom_libcxx = false
++#      is_fuchsia || is_android || is_apple || is_linux || is_chromeos_lacros ||
++#      (is_win && is_clang) ||
++#      (is_chromeos && default_toolchain != "//build/toolchain/cros:target")
+ 
+   # Use libc++ instead of stdlibc++ when using the host_cpu toolchain, even if
+   # use_custom_libcxx is false. This is useful for cross-compiles where a custom
+diff --git a/config/clang/clang.gni b/config/clang/clang.gni
+index 1e6621848..4d6bd7201 100644
+--- a/config/clang/clang.gni
++++ b/config/clang/clang.gni
+@@ -10,9 +10,9 @@ declare_args() {
+   # Indicates if the build should use the Chrome-specific plugins for enforcing
+   # coding guidelines, etc. Only used when compiling with Chrome's Clang, not
+   # Chrome OS's.
+-  clang_use_chrome_plugins =
+-      is_clang && !is_nacl && current_os != "zos" &&
+-      default_toolchain != "//build/toolchain/cros:target"
++  clang_use_chrome_plugins = false
++#      is_clang && !is_nacl && !is_ios && current_os != "zos" &&
++#      default_toolchain != "//build/toolchain/cros:target"
+ 
+   clang_base_path = default_clang_base_path
+ }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 48aa424f8..219991410 100644
+index b3d4c6b98..3fecca9f5 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -537,12 +537,15 @@ config("compiler") {
@@ -33,6 +60,140 @@ index 48aa424f8..219991410 100644
      if (!is_debug && use_thin_lto && is_a_target_toolchain) {
        if (is_win) {
          ldflags += [ "-mllvm:-instcombine-lower-dbg-declare=0" ]
--- 
-2.32.0 (Apple Git-132)
-
+@@ -1238,7 +1241,7 @@ config("compiler_deterministic") {
+     # different build directory like "out/feature_a" and "out/feature_b" if
+     # we build same files with same compile flag.
+     # Other paths are already given in relative, no need to normalize them.
+-    if (is_nacl) {
++    #if (is_nacl) {
+       # TODO(https://crbug.com/1231236): Use -ffile-compilation-dir= here.
+       cflags += [
+         "-Xclang",
+@@ -1246,11 +1249,11 @@ config("compiler_deterministic") {
+         "-Xclang",
+         ".",
+       ]
+-    } else {
++    #} else {
+       # -ffile-compilation-dir is an alias for both -fdebug-compilation-dir=
+       # and -fcoverage-compilation-dir=.
+-      cflags += [ "-ffile-compilation-dir=." ]
+-    }
++    #  cflags += [ "-ffile-compilation-dir=." ]
++    #}
+     if (!is_win) {
+       # We don't use clang -cc1as on Windows (yet? https://crbug.com/762167)
+       asmflags = [ "-Wa,-fdebug-compilation-dir,." ]
+@@ -1717,15 +1720,15 @@ config("no_chromium_code") {
+       # third-party libraries.
+       "-Wno-c++11-narrowing",
+     ]
+-    if (!is_nacl) {
+-      cflags += [
+-        # Disabled for similar reasons as -Wunused-variable.
+-        "-Wno-unused-but-set-variable",
++    #if (!is_nacl) {
++    #  cflags += [
++    #    # Disabled for similar reasons as -Wunused-variable.
++    #    "-Wno-unused-but-set-variable",
+ 
+-        # TODO(https://crbug.com/1202159): Clean up and enable.
+-        "-Wno-misleading-indentation",
+-      ]
+-    }
++    #    # TODO(https://crbug.com/1202159): Clean up and enable.
++    #    "-Wno-misleading-indentation",
++    #  ]
++    #}
+   }
+ 
+   # Rust warnings to ignore in third party dependencies. This list is
+diff --git a/config/compiler/compiler.gni b/config/compiler/compiler.gni
+index 8e7bdd8f0..f447a3e18 100644
+--- a/config/compiler/compiler.gni
++++ b/config/compiler/compiler.gni
+@@ -220,8 +220,9 @@ declare_args() {
+   # 32-bit builds, which lld doesn't support) or when targeting "catalyst"
+   # (which lld doesn't support either).
+   # The default linker everywhere else.
+-  use_lld = is_clang && !(is_mac && is_gpu_fyi_bot) && current_os != "zos" &&
+-            !(is_ios && (is_cronet_build || target_environment == "catalyst"))
++  use_lld = false
++#  use_lld = is_clang && !(is_mac && is_gpu_fyi_bot) && current_os != "zos" &&
++#            !(is_ios && (is_cronet_build || target_environment == "catalyst"))
+ }
+ 
+ declare_args() {
+diff --git a/config/ios/BUILD.gn b/config/ios/BUILD.gn
+index e516b7019..6e146bd7b 100644
+--- a/config/ios/BUILD.gn
++++ b/config/ios/BUILD.gn
+@@ -126,16 +126,16 @@ config("runtime_library") {
+   # TODO(crbug.com/1223481): Temporarily use a different
+   # libclang_rt.iossim.a for arm64 simulator builds. This can be
+   # removed when an arm64 slice is added to upstream Clang.
+-  if (target_environment == "simulator" && current_cpu == "arm64") {
+-    assert(1300 <= xcode_version_int && xcode_version_int <= 1321)
+-    ldflags += [
+-      "-lSystem",
+-      rebase_path("$ios_toolchains_path/usr/lib/clang/13.0.0/" +
+-                      "lib/darwin/libclang_rt.iossim.a",
+-                  root_build_dir),
+-      "-nodefaultlibs",
+-    ]
+-  }
++  #if (target_environment == "simulator" && current_cpu == "arm64") {
++  #  assert(1300 <= xcode_version_int && xcode_version_int <= 1321)
++  #  ldflags += [
++  #    "-lSystem",
++  #    rebase_path("$ios_toolchains_path/usr/lib/clang/13.0.0/" +
++  #                    "lib/darwin/libclang_rt.iossim.a",
++  #                root_build_dir),
++  #    "-nodefaultlibs",
++  #  ]
++  #}
+ 
+   # TODO(crbug.com/1259122): Temporarily use a different libclang_rt.osx.a
+   # for catalyst build. This can be removed when a catalyst slice is added
+diff --git a/config/ios/rules.gni b/config/ios/rules.gni
+index b78090574..9cc4e1811 100644
+--- a/config/ios/rules.gni
++++ b/config/ios/rules.gni
+@@ -116,8 +116,8 @@ template("lipo_binary") {
+       ]
+       args += [
+         "-Wcrl,dsym," + rebase_path("$root_out_dir/.", root_build_dir),
+-        "-Wcrl,dsymutilpath," +
+-            rebase_path("//tools/clang/dsymutil/bin/dsymutil", root_build_dir),
++        #"-Wcrl,dsymutilpath," +
++        #    rebase_path("//tools/clang/dsymutil/bin/dsymutil", root_build_dir),
+       ]
+     }
+ 
+diff --git a/toolchain/apple/toolchain.gni b/toolchain/apple/toolchain.gni
+index 2f74d1d26..5ae1ae0a0 100644
+--- a/toolchain/apple/toolchain.gni
++++ b/toolchain/apple/toolchain.gni
+@@ -106,7 +106,8 @@ template("apple_toolchain") {
+       toolchain_uses_lld = use_lld
+     }
+ 
+-    prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
++    #prefix = rebase_path("$clang_base_path/bin/", root_build_dir)
++    prefix = invoker.bin_path
+     _cc = "${prefix}clang"
+     _cxx = "${prefix}clang++"
+ 
+diff --git a/toolchain/mac/BUILD.gn b/toolchain/mac/BUILD.gn
+index 0adce9400..d2b6a5b57 100644
+--- a/toolchain/mac/BUILD.gn
++++ b/toolchain/mac/BUILD.gn
+@@ -23,7 +23,7 @@ template("mac_toolchain") {
+ 
+       if (target_os == "ios") {
+         # Use LLD for the host part of a chrome/ios build.
+-        use_lld = true
++        use_lld = false
+ 
+         # Defined in //base, would trigger a warning if the build doesn't depend
+         # on it.
