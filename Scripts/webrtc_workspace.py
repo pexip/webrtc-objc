@@ -15,13 +15,6 @@ WEBRTC_PATH = os.path.join(CWD_PATH, 'src')
 WEBRTC_BUILD_PATH = os.path.join(WEBRTC_PATH, 'build')
 THIRD_PARTY_PATH = os.path.join(WEBRTC_PATH, 'third_party')
 OUTPUT_PATH = os.path.join(CWD_PATH, 'out')
-PATCHES_PATH = os.path.join(CWD_PATH, 'patches')
-WEBRTC_PATCHES = [
-    os.path.join(PATCHES_PATH, 'catalyst-fixes.patch')
-]
-BUILD_PATCHES = [
-    os.path.join(PATCHES_PATH, 'bitcode-fixes.patch')
-]
 
 sys.path.append(WEBRTC_BUILD_PATH)
 
@@ -124,11 +117,9 @@ class WebRTCWorkspace:
         _run(['gclient', 'sync', '--with_branch_heads', '--with_tags'])
         
     def _apply_patches(self):
-        # Merge conflicts here indicate it's time to update the patch.
-        for patch in WEBRTC_PATCHES:
-            _run(['git', 'am', '-3', patch], WEBRTC_PATH)
-        for patch in BUILD_PATCHES:
-            _run(['git', 'am', '-3', patch], WEBRTC_BUILD_PATH)
+        os.system(f"sed -i '' 's/-ffile-compilation-dir/-fdebug-compilation-dir/g' {WEBRTC_BUILD_PATH}/config/compiler/BUILD.gn")
+        os.system(f"sed -i '' 's/cflags += \[ \"-gdwarf-aranges\" \]/# cflags += \[ \"-gdwarf-aranges\" \]/g' {WEBRTC_BUILD_PATH}/config/compiler/BUILD.gn")
+        os.system(f"sed -i '' 's/if (target_environment == \"simulator\" && current_cpu == \"arm64\")/if \(false\)/g' {WEBRTC_BUILD_PATH}/config/ios/BUILD.gn")
 
     def _git_reset(self, cwd: str):
         _run(['git', 'reset', '--hard', 'origin'], cwd)

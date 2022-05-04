@@ -101,7 +101,7 @@ class WebRTCBuilder:
             f"target_cpu=\"{target_cpu}\"",
             f"target_environment=\"{target_environment}\"",
             'ios_enable_code_signing=false',
-            'use_lld=false',
+            'use_xcode_clang=true',
             f"ios_deployment_target=\"{deployment_target}\"",
             f"enable_ios_bitcode={('true' if enable_bitcode else 'false')}"
         ]
