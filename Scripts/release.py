@@ -193,6 +193,7 @@ def main():
     # 1. Prepare workspace
     from webrtc_workspace import WebRTCWorkspace
     workspace = WebRTCWorkspace(milestone)
+    workspace.clean()
     workspace.prepare()
 
     # 2. Create a new release
