@@ -8,7 +8,7 @@ URL-based binary targets from private GitHub repos are supported in Xcode 13.3.
 
 Add `machine api.github.com login YOUR_GITHUB_USERNAME password YOUR_GITHUB_TOKEN` to your `~/.netrc` file.
 
-**For universal `xcframework` w/ bitcode and w/ dsyms:**
+**For universal `xcframework` and w/ dsyms:**
 
 ```swift
 dependencies: [
@@ -16,7 +16,7 @@ dependencies: [
 ]
 ```
 
-**For any other `xcframework` provided by this repo (iOS only, w/ dsyms, w/o bitcode, etc):**
+**For any other `xcframework` provided by this repo (iOS only, w/ dsyms, etc):**
 
 - Create a local Swift Package and use [Package.swift](https://github.com/pexip/webrtc-ios-builds/blob/master/Package.swift) as a template
 - Url and checksum of the binary can be found in the "Binaries" section of the release description
@@ -47,14 +47,12 @@ $ python release.py
 - Create a new release on GitHub
 - Upload xcframeworks as release assets:
   - iOS (device, simulator):
-    - "WebRTC-ios.zip" - w/o bitcode, w/o dsyms
-    - "WebRTC-ios_dsyms.zip" - w/o bitcode, w/ dsyms
-    - "WebRTC-ios_bitcode.zip" - w/ bitcode, w/ dsyms
+    - "WebRTC-ios.zip" - w/o dsyms
+    - "WebRTC-ios_dsyms.zip" - w/ dsyms
   - Universal (iOS device, iOS simulator, macOS):
-    - "WebRTC-universal.zip" - w/o bitcode, w/o dsyms
-    - "WebRTC-universal_dsyms.zip" - w/o bitcode, w/ dsyms
-    - "WebRTC-universal_bitcode.zip" - w/ bitcode, w/ dsyms
-- Update url of the binary target in `Package.swift` with new asset url (universal w/ bitcode w/ dsyms)
+    - "WebRTC-universal.zip" - w/o dsyms
+    - "WebRTC-universal_dsyms.zip" - w/ dsyms
+- Update url of the binary target in `Package.swift` with new asset url (universal w/ dsyms)
 
 ## Build
 
@@ -69,5 +67,5 @@ $ python build.py
 
 ```console
 $ cd Scripts
-$ python build.py --milestone 100 --platforms ios simulator mac catalyst --bitcode --dsyms
+$ python build.py --milestone 100 --platforms ios simulator mac catalyst --dsyms
 ```

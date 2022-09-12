@@ -25,16 +25,10 @@ def parse_args() -> List:
         help='Platforms to build. Defaults to %(default)s.'
     )
     parser.add_argument(
-        '--bitcode',                
-        action='store_true',
-        default=False,
-        help='Compile with bitcode.'
-    )
-    parser.add_argument(
         '--dsyms',                
         action='store_true',
         default=False,
-        help='Include dSYMs. Has no effect when compiled with bitcode.'
+        help='Include dSYMs.'
     )
     return parser.parse_args()
 
@@ -58,7 +52,6 @@ def main():
         workspace.webrtc_path,
         workspace.depot_tools_path,
         workspace.output_path,
-        args.bitcode,
         args.dsyms,
         args.platforms,
         milestone

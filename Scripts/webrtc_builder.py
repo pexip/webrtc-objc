@@ -34,7 +34,6 @@ class WebRTCBuilder:
     run_path: str
     depot_tools_path: str
     output_path: str
-    bitcode: bool
     dsyms: bool
     platform_names: List[str]
     version_number: str
@@ -86,7 +85,8 @@ class WebRTCBuilder:
             'use_goma=false',
             'rtc_enable_objc_symbol_export=true',
             'enable_stripping=true',
-            'enable_dsyms=' + ('true' if self.dsyms else 'false')
+            'enable_dsyms=' + ('true' if self.dsyms else 'false'),
+            'use_lld=true'
         ]
 
     def _ios_gn_args(
@@ -95,15 +95,12 @@ class WebRTCBuilder:
         target_environment: str, 
         deployment_target: str
     ) -> List[str]:
-        enable_bitcode = self.bitcode and target_environment == 'device'
         return [
             'target_os="ios"',
             f"target_cpu=\"{target_cpu}\"",
             f"target_environment=\"{target_environment}\"",
             'ios_enable_code_signing=false',
-            'use_xcode_clang=true',
-            f"ios_deployment_target=\"{deployment_target}\"",
-            f"enable_ios_bitcode={('true' if enable_bitcode else 'false')}"
+            f"ios_deployment_target=\"{deployment_target}\""
         ]
 
     def _mac_gn_args(self, target_cpu: str, deployment_target: str) -> List[str]:
