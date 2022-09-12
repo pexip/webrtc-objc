@@ -53,7 +53,6 @@ class WebRTCWorkspace:
         self._download_depot_tools()
         self._download_webrtc()
         self._sync_gclient()
-        self._apply_patches()
 
     def clean(self):
         self._git_reset(DEPOT_TOOLS_PATH)
@@ -115,11 +114,6 @@ class WebRTCWorkspace:
     def _sync_gclient(self):
         logging.info('Syncing gclient')
         _run(['gclient', 'sync', '--with_branch_heads', '--with_tags'])
-        
-    def _apply_patches(self):
-        os.system(f"sed -i '' 's/-ffile-compilation-dir/-fdebug-compilation-dir/g' {WEBRTC_BUILD_PATH}/config/compiler/BUILD.gn")
-        os.system(f"sed -i '' 's/cflags += \[ \"-gdwarf-aranges\" \]/# cflags += \[ \"-gdwarf-aranges\" \]/g' {WEBRTC_BUILD_PATH}/config/compiler/BUILD.gn")
-        os.system(f"sed -i '' 's/if (target_environment == \"simulator\" && current_cpu == \"arm64\")/if \(false\)/g' {WEBRTC_BUILD_PATH}/config/ios/BUILD.gn")
 
     def _git_reset(self, cwd: str):
         _run(['git', 'reset', '--hard', 'origin'], cwd)

@@ -29,9 +29,8 @@ PLATFORMS = {
     'universal': ['ios', 'simulator', 'mac']
 }
 BUILD_CONFIGS = [
-    {'bitcode': False, 'dsyms': False},
-    {'bitcode': False, 'dsyms': True},
-    {'bitcode': True, 'dsyms': True}
+    {'dsyms': False},
+    {'dsyms': True}
 ]
 
 ### - CLASSES
@@ -62,10 +61,7 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
     for (name, platforms) in list(PLATFORMS.items()):
         for config in BUILD_CONFIGS:
             folder_name = name
-            bitcode = config['bitcode']
             dsyms = config['dsyms']
-            if bitcode:
-                folder_name += '_bitcode'
             if dsyms:
                 folder_name += '_dsyms'
             
@@ -73,7 +69,6 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
                 workspace.webrtc_path,
                 workspace.depot_tools_path,
                 os.path.join(workspace.output_path, folder_name),
-                bitcode,
                 dsyms,
                 platforms,
                 workspace.version_number
