@@ -112,13 +112,13 @@ class WebRTCBuilder:
 
     def _parse_platform(self, name: str) -> Platform:
         if name == 'ios':
-            return Platform('device', '12.0', ['arm64'])
+            return Platform('device', '13.0', ['arm64'])
         elif name == 'simulator':
-            return Platform(name, '12.0', ['arm64', 'x64']) 
+            return Platform(name, '13.0', ['arm64', 'x64']) 
         elif name == 'catalyst':
             return Platform(name, '14.0', ['arm64', 'x64'])
         elif name == 'mac':
-            return Platform(name, '10.11.0', ['arm64', 'x64'])
+            return Platform(name, '10.13.0', ['arm64', 'x64'])
         else:
             raise NotImplementedError
             

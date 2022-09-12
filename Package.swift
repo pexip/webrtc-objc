@@ -17,8 +17,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "WebRTC",
-            url: "https://api.github.com/repos/pexip/webrtc-ios-builds/releases/assets/64544466.zip",
-            checksum: "1ddefa62bfe01fbb2fbebea94c7c7992a26e09d3f0ee6c18ee008f62f498ce6f"
+            url: "https://api.github.com/repos/pexip/webrtc-ios-builds/releases/assets/77662896.zip",
+            checksum: "f8c568fb7dfc983d9024ed091db5fc92b5e4be1416e29de195b327f9100389c5"
         ),
     ]
 )
