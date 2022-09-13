@@ -85,8 +85,7 @@ class WebRTCBuilder:
             'use_goma=false',
             'rtc_enable_objc_symbol_export=true',
             'enable_stripping=true',
-            'enable_dsyms=' + ('true' if self.dsyms else 'false'),
-            'use_lld=true'
+            'enable_dsyms=' + ('true' if self.dsyms else 'false')
         ]
 
     def _ios_gn_args(
@@ -95,13 +94,15 @@ class WebRTCBuilder:
         target_environment: str, 
         deployment_target: str
     ) -> List[str]:
-        return [
+        args = [
             'target_os="ios"',
             f"target_cpu=\"{target_cpu}\"",
             f"target_environment=\"{target_environment}\"",
-            'ios_enable_code_signing=false',
             f"ios_deployment_target=\"{deployment_target}\""
         ]
+        if target_environment == 'device':
+            args.append('ios_enable_code_signing=false')
+        return args
 
     def _mac_gn_args(self, target_cpu: str, deployment_target: str) -> List[str]:
         return [
