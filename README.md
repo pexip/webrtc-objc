@@ -4,21 +4,17 @@
 
 ### Swift Package Manager
 
-URL-based binary targets from private GitHub repos are supported in Xcode 13.3.
-
-Add `machine api.github.com login YOUR_GITHUB_USERNAME password YOUR_GITHUB_TOKEN` to your `~/.netrc` file.
-
 **For universal `xcframework` and w/ dsyms:**
 
 ```swift
 dependencies: [
-    .Package(url: "https://github.com/pexip/webrtc-ios-builds", .upToNextMajor("100.0.0"))
+    .Package(url: "https://github.com/pexip/webrtc-objc", .upToNextMajor("100.0.0"))
 ]
 ```
 
 **For any other `xcframework` provided by this repo (iOS only, w/ dsyms, etc):**
 
-- Create a local Swift Package and use [Package.swift](https://github.com/pexip/webrtc-ios-builds/blob/master/Package.swift) as a template
+- Create a local Swift Package and use [Package.swift](https://github.com/pexip/webrtc-objc/blob/master/Package.swift) as a template
 - Url and checksum of the binary can be found in the "Binaries" section of the release description
 
 ### Manual
