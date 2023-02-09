@@ -8,4 +8,3 @@ Scripts/*
 !Scripts/release.py
 !Scripts/webrtc_builder.py
 !Scripts/webrtc_workspace.py
-!Scripts/patches
