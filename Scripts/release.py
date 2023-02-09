@@ -122,7 +122,7 @@ def checksum(file: str) -> str:
 def update_source_code(asset: Asset):
     logging.info("Updating Package.swift.")
     package_path = os.path.join(ROOT_PATH, 'Package.swift')
-    os.system(f"sed -i '' 's#url:.*,#url: \"{asset.url}\",#' {package_path}")
+    os.system(f"sed -i '' 's#url:.*,#url: \"{asset.browser_download_url}\",#' {package_path}")
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
