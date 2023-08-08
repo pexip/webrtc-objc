@@ -90,8 +90,8 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
                 platforms,
                 workspace.version_number
             )
-            #builder.clean()
-            #builder.build()
+            builder.clean()
+            builder.build()
             
             zip_name = f"WebRTC-{folder_name}.zip"
             zip_path = os.path.join(builder.output_path, zip_name)
@@ -123,10 +123,13 @@ def checksum(file: str) -> str:
     return sha256_hash.hexdigest()
 
 def update_source_code(asset: Asset, details: ReleaseDetails):
-    logging.info("Updating Package.swift.")
+    logging.info("Updating Package.swift and Podspec")
     package_path = os.path.join(ROOT_PATH, 'Package.swift')
     os.system(f"sed -i '' 's#url:.*,#url: \"{details.asset_url(asset)}\",#' {package_path}")
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
+    podspec_path = os.path.join(ROOT_PATH, 'WebRTCObjc.podspec')
+    os.system(f"sed -i '' 's#http:.*,#http: \'{details.asset_url(asset)}\',#' {podspec_path}")
+    os.system(f"sed -i '' 's#sha256:.*,#sha256: \'{asset.checksum}\',#' {podspec_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
     logging.info(f"Creating a new draft release {details.tag} on GitHub.")
@@ -144,7 +147,7 @@ def draft_release(details: ReleaseDetails) -> Any:
 
 def publish_release(id: int, details: ReleaseDetails, assets: List[Asset]):
     logging.info(f"Publishing a release {details.tag} on GitHub.")
-    commit_message = f"\"Update Package.swift for {details.name}\""
+    commit_message = f"\"Release {details.name}\""
     subprocess.check_call(['git', 'add', '.'], cwd=ROOT_PATH)
     subprocess.check_call(['git', 'commit', '-m', commit_message], cwd=ROOT_PATH)
     subprocess.check_call(['git', 'push', 'origin', 'main'], cwd=ROOT_PATH)
@@ -231,7 +234,7 @@ def main():
     release = draft_release(release_details)
 
     # 3. Build and upload xcframeworks
-    #shutil.rmtree(workspace.output_path, ignore_errors = True)
+    shutil.rmtree(workspace.output_path, ignore_errors = True)
     assets = create_assets(workspace, release['upload_url'])
     
     # 4. Update Package.swift
