@@ -32,8 +32,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "WebRTC",
-            url: "https://github.com/pexip/webrtc-objc/releases/download/108.0.5359/WebRTC-universal_dsyms.zip",
-            checksum: "9178e1a2623c7215c9313fa4e6710a9a209badc8d99cee85f3e732b68c1d9675"
+            url: "https://api.github.com/repos/pexip/webrtc-objc/releases/assets/120635321.zip",
+            checksum: "2deb321d5d59248a753ad77d8d96e24acf71bff08616cc0622107a1d20bdccd0"
         ),
     ]
 )

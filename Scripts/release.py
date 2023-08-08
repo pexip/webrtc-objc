@@ -87,8 +87,8 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
                 platforms,
                 workspace.version_number
             )
-            builder.clean()
-            builder.build()
+            #builder.clean()
+            #builder.build()
             
             zip_name = f"WebRTC-{folder_name}.zip"
             zip_path = os.path.join(builder.output_path, zip_name)
@@ -122,7 +122,7 @@ def checksum(file: str) -> str:
 def update_source_code(asset: Asset):
     logging.info("Updating Package.swift.")
     package_path = os.path.join(ROOT_PATH, 'Package.swift')
-    os.system(f"sed -i '' 's#url:.*,#url: \"{asset.browser_download_url}\",#' {package_path}")
+    os.system(f"sed -i '' 's#url:.*,#url: \"{asset.url}\",#' {package_path}")
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
@@ -228,7 +228,7 @@ def main():
     release = draft_release(release_details)
 
     # 3. Build and upload xcframeworks
-    shutil.rmtree(workspace.output_path, ignore_errors = True)
+    #shutil.rmtree(workspace.output_path, ignore_errors = True)
     assets = create_assets(workspace, release['upload_url'])
     
     # 4. Update Package.swift
