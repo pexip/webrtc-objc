@@ -128,8 +128,8 @@ def update_source_code(asset: Asset, details: ReleaseDetails):
     os.system(f"sed -i '' 's#url:.*,#url: \"{details.asset_url(asset)}\",#' {package_path}")
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
     podspec_path = os.path.join(ROOT_PATH, 'WebRTCObjc.podspec')
-    os.system(f"sed -i '' 's#http:.*,#http: \'{details.asset_url(asset)}\',#' {podspec_path}")
-    os.system(f"sed -i '' 's#sha256:.*,#sha256: \'{asset.checksum}\',#' {podspec_path}")
+    os.system(f"sed -i '' 's#http:.*,#http: \"{details.asset_url(asset)}\",#' {podspec_path}")
+    os.system(f"sed -i '' 's#sha256:.*,#sha256: \"{asset.checksum}\",#' {podspec_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
     logging.info(f"Creating a new draft release {details.tag} on GitHub.")

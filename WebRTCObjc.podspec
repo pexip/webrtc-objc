@@ -44,8 +44,8 @@ Pod::Spec.new do |s|
     s.ios.deployment_target = '13.0'
     s.osx.deployment_target = '10.15'
     s.source = {
-      http: https://github.com/pexip/webrtc-objc/releases/download/115.0.5790/WebRTC-universal_dsyms.zip,
-      sha256: 252129893a59ad6d61fca88bf679e33619fec3aaa8d57d8b0eb72d935ea32b5c,
+      http: "https://github.com/pexip/webrtc-objc/releases/download/115.0.5790/WebRTC-universal_dsyms.zip",
+      sha256: "252129893a59ad6d61fca88bf679e33619fec3aaa8d57d8b0eb72d935ea32b5c",
       type: 'zip',
       headers: ['Accept: application/octet-stream']
     }
