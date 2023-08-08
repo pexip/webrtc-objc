@@ -33,6 +33,7 @@ from webrtc_builder import XCFRAMEWORK_NAME
 CWD_PATH = os.path.dirname(os.path.realpath(__file__))
 ROOT_PATH = os.path.join(CWD_PATH, os.pardir)
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_URL = 'https://github.com/pexip/webrtc-objc'
 GITHUB_API_URL = 'https://api.github.com/repos/pexip/webrtc-objc'
 GITHUB_HEADERS = {
     'accept': 'application/vnd.github.v3+json', 
@@ -52,8 +53,7 @@ BUILD_CONFIGS = [
 @dataclass
 class Asset:
     name: str
-    url: str
-    checksum: str
+    checksum: str     
 
 @dataclass
 class ReleaseDetails:
@@ -65,6 +65,9 @@ class ReleaseDetails:
     @property
     def name(self) -> str:
         return f"M{self.webrtc_milestone}"
+    
+    def asset_url(self, asset: Asset) -> str:
+        return f"{GITHUB_URL}/releases/download/{self.tag}/{asset.name}"
 
 ### - FUNCTIONS
 
@@ -97,7 +100,7 @@ def create_assets(workspace: WebRTCWorkspace, upload_url: str) -> str:
                 cwd=builder.output_path
             )
             asset = upload_asset(zip_name, zip_path, upload_url)  
-            assets.append(Asset(zip_name, f"{asset['url']}.zip", checksum(zip_path)))
+            assets.append(Asset(zip_name, checksum(zip_path)))
     return assets
 
 def upload_asset(name: str, path: str, url: str) -> Any:
@@ -119,10 +122,10 @@ def checksum(file: str) -> str:
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-def update_source_code(asset: Asset):
+def update_source_code(asset: Asset, details: ReleaseDetails):
     logging.info("Updating Package.swift.")
     package_path = os.path.join(ROOT_PATH, 'Package.swift')
-    os.system(f"sed -i '' 's#url:.*,#url: \"{asset.url}\",#' {package_path}")
+    os.system(f"sed -i '' 's#url:.*,#url: \"{details.asset_url(asset)}\",#' {package_path}")
     os.system(f"sed -i '' 's#checksum:.*#checksum: \"{asset.checksum}\"#' {package_path}")
 
 def draft_release(details: ReleaseDetails) -> Any:
@@ -153,7 +156,7 @@ def publish_release(id: int, details: ReleaseDetails, assets: List[Asset]):
     
     for asset in assets:
         body += f"Name: {asset.name}\n"
-        body += f"URL: {asset.url}\n"
+        body += f"URL: {details.asset_url(asset)}\n"
         body += f"Checksum: {asset.checksum}\n\n"    
     
     parameters = {'draft': False, 'body': body}
@@ -232,7 +235,7 @@ def main():
     assets = create_assets(workspace, release['upload_url'])
     
     # 4. Update Package.swift
-    update_source_code(asset = assets[-1])
+    update_source_code(asset = assets[-1], details=release_details)
 
     # 5. Publish a new release
     publish_release(release['id'], release_details, assets)
