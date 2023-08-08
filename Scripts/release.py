@@ -144,7 +144,7 @@ def publish_release(id: int, details: ReleaseDetails, assets: List[Asset]):
     commit_message = f"\"Update Package.swift for {details.name}\""
     subprocess.check_call(['git', 'add', '.'], cwd=ROOT_PATH)
     subprocess.check_call(['git', 'commit', '-m', commit_message], cwd=ROOT_PATH)
-    subprocess.check_call(['git', 'push', 'origin', 'master'], cwd=ROOT_PATH)
+    subprocess.check_call(['git', 'push', 'origin', 'main'], cwd=ROOT_PATH)
     
     body = f"**Milestone**: {details.name}\n"
     body += f"**Branch**: {details.webrtc_branch}\n"
